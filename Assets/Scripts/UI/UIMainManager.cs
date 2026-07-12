@@ -67,8 +67,23 @@ public class UIMainManager : MonoBehaviour
                 ShowMenu<UIPanelPause>();
                 break;
             case GameManager.eStateGame.GAME_OVER:
-                ShowMenu<UIPanelGameOver>();
+                ShowMenu("PanelGameOver");
                 break;
+            case GameManager.eStateGame.GAME_WIN:
+                ShowMenu("PanelWin");
+                break;
+        }
+    }
+
+    private void ShowMenu(string menuObjectName)
+    {
+        for (int i = 0; i < m_menuList.Length; i++)
+        {
+            MonoBehaviour menuBehaviour = m_menuList[i] as MonoBehaviour;
+            if (menuBehaviour != null && menuBehaviour.gameObject.name == menuObjectName)
+                m_menuList[i].Show();
+            else
+                m_menuList[i].Hide();
         }
     }
 
@@ -106,12 +121,27 @@ public class UIMainManager : MonoBehaviour
 
     internal void LoadLevelMoves()
     {
-        m_gameManager.LoadLevel(GameManager.eLevelMode.MOVES);
+        m_gameManager.LoadLevel(GameManager.ePlayMode.MANUAL);
     }
 
     internal void LoadLevelTimer()
     {
-        m_gameManager.LoadLevel(GameManager.eLevelMode.TIMER);
+        m_gameManager.LoadLevel(GameManager.ePlayMode.AUTO_WIN);
+    }
+
+    internal void LoadAutoWin()
+    {
+        m_gameManager.LoadLevel(GameManager.ePlayMode.AUTO_WIN);
+    }
+
+    internal void LoadAutoLose()
+    {
+        m_gameManager.LoadLevel(GameManager.ePlayMode.AUTO_LOSE);
+    }
+
+    internal string GetGameStatus()
+    {
+        return string.Format("BOARD: {0}\nTRAY: {1}/5", m_gameManager.RemainingItems, m_gameManager.TrayCount);
     }
 
     internal void ShowGameMenu()

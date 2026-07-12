@@ -12,6 +12,12 @@ public class UIPanelGame : MonoBehaviour,IMenu
 
     private UIMainManager m_mngr;
 
+    private void Update()
+    {
+        if (m_mngr != null && LevelConditionView != null)
+            LevelConditionView.text = m_mngr.GetGameStatus();
+    }
+
     private void Awake()
     {
         btnPause.onClick.AddListener(OnClickPause);

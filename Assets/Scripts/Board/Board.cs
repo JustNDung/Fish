@@ -110,6 +110,72 @@ public class Board
         }
     }
 
+    /// <summary>
+    /// Creates a solvable initial board. Every type occurs a multiple of three times.
+    /// For the configured 4x6 board the distribution is 6,3,3,3,3,3,3.
+    /// </summary>
+    internal void FillForTripleMatch()
+    {
+        int total = boardSizeX * boardSizeY;
+        if (total % 3 != 0)
+        {
+            Debug.LogError("Triple Tray board size must be divisible by 3.");
+            total -= total % 3;
+        }
+
+        List<NormalItem.eNormalType> types = new List<NormalItem.eNormalType>();
+        NormalItem.eNormalType[] available = (NormalItem.eNormalType[])Enum.GetValues(typeof(NormalItem.eNormalType));
+        int triples = total / 3;
+        for (int i = 0; i < triples; i++)
+        {
+            NormalItem.eNormalType type = available[i % available.Length];
+            types.Add(type);
+            types.Add(type);
+            types.Add(type);
+        }
+
+        for (int i = types.Count - 1; i > 0; i--)
+        {
+            int swapIndex = UnityEngine.Random.Range(0, i + 1);
+            NormalItem.eNormalType temp = types[i];
+            types[i] = types[swapIndex];
+            types[swapIndex] = temp;
+        }
+
+        int index = 0;
+        for (int y = 0; y < boardSizeY; y++)
+        {
+            for (int x = 0; x < boardSizeX; x++)
+            {
+                if (index >= types.Count) continue;
+                NormalItem item = new NormalItem();
+                item.SetType(types[index++]);
+                item.SetView();
+                item.SetViewRoot(m_root);
+                m_cells[x, y].Assign(item);
+                m_cells[x, y].ApplyItemPosition(false);
+            }
+        }
+    }
+
+    internal int RemainingItems
+    {
+        get { return GetOccupiedCells().Count; }
+    }
+
+    internal List<Cell> GetOccupiedCells()
+    {
+        List<Cell> result = new List<Cell>();
+        for (int x = 0; x < boardSizeX; x++)
+        {
+            for (int y = 0; y < boardSizeY; y++)
+            {
+                if (!m_cells[x, y].IsEmpty) result.Add(m_cells[x, y]);
+            }
+        }
+        return result;
+    }
+
     internal void Shuffle()
     {
         List<Item> list = new List<Item>();
