@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UI;
 
 public class UIPanelMain : MonoBehaviour, IMenu
@@ -9,7 +9,7 @@ public class UIPanelMain : MonoBehaviour, IMenu
 
     private Button m_btnAutoWin;
     private Button m_btnAutoLose;
-    private Text m_modeTitle;
+    private Button m_btnTimeAttack;
     private Text m_modeDescription;
     private UIMainManager m_mngr;
 
@@ -17,9 +17,10 @@ public class UIPanelMain : MonoBehaviour, IMenu
     {
         if (btnMoves == null) return;
 
-        ConfigureButton(btnMoves, "PLAY", 90f, OnClickPlay);
-        m_btnAutoWin = CreateButton("btnAutoplay", "AUTOPLAY", 0f, OnClickAutoWin);
-        m_btnAutoLose = CreateButton("btnAutoLose", "AUTO LOSE", -90f, OnClickAutoLose);
+        ConfigureButton(btnMoves, "PLAY", 135f, OnClickPlay);
+        m_btnAutoWin = CreateButton("btnAutoplay", "AUTOPLAY", 45f, OnClickAutoWin);
+        m_btnAutoLose = CreateButton("btnAutoLose", "AUTO LOSE", -45f, OnClickAutoLose);
+        m_btnTimeAttack = CreateButton("btnTimeAttack", "TIME ATTACK", -135f, OnClickTimeAttack);
         CreateModeTexts();
 
         // Some older scene versions contain a second mode button; it is no longer needed.
@@ -31,19 +32,12 @@ public class UIPanelMain : MonoBehaviour, IMenu
         Text template = btnMoves.GetComponentInChildren<Text>();
         if (template == null) return;
 
-        m_modeTitle = Instantiate(template, transform);
-        m_modeTitle.gameObject.name = "txtGameModeTitle";
-        m_modeTitle.text = "SELECT GAME MODE";
-        m_modeTitle.fontSize = 32;
-        m_modeTitle.fontStyle = FontStyle.Bold;
-        SetTextRect(m_modeTitle.rectTransform, 190f, 420f, 55f);
-
         m_modeDescription = Instantiate(template, transform);
         m_modeDescription.gameObject.name = "txtGameModeDescription";
-        m_modeDescription.text = "PLAY: Manual    •    AUTOPLAY: Auto Win    •    AUTO LOSE: Auto Lose";
-        m_modeDescription.fontSize = 17;
+        m_modeDescription.text = "TIME ATTACK: Clear the board in 60 seconds";
+        m_modeDescription.fontSize = 16;
         m_modeDescription.fontStyle = FontStyle.Normal;
-        SetTextRect(m_modeDescription.rectTransform, -175f, 700f, 40f);
+        SetTextRect(m_modeDescription.rectTransform, -215f, 700f, 40f);
     }
 
     private static void SetTextRect(RectTransform rect, float anchoredY, float width, float height)
@@ -102,12 +96,14 @@ public class UIPanelMain : MonoBehaviour, IMenu
         if (btnMoves) btnMoves.onClick.RemoveAllListeners();
         if (m_btnAutoWin) m_btnAutoWin.onClick.RemoveAllListeners();
         if (m_btnAutoLose) m_btnAutoLose.onClick.RemoveAllListeners();
+        if (m_btnTimeAttack) m_btnTimeAttack.onClick.RemoveAllListeners();
     }
 
     public void Setup(UIMainManager mngr) { m_mngr = mngr; }
     private void OnClickPlay() { m_mngr.LoadLevelMoves(); }
     private void OnClickAutoWin() { m_mngr.LoadAutoWin(); }
     private void OnClickAutoLose() { m_mngr.LoadAutoLose(); }
+    private void OnClickTimeAttack() { m_mngr.LoadTimeAttack(); }
     public void Show() { gameObject.SetActive(true); }
     public void Hide() { gameObject.SetActive(false); }
 }

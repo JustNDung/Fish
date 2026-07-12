@@ -126,6 +126,8 @@ public class Board
         List<NormalItem.eNormalType> types = new List<NormalItem.eNormalType>();
         NormalItem.eNormalType[] available = (NormalItem.eNormalType[])Enum.GetValues(typeof(NormalItem.eNormalType));
         int triples = total / 3;
+        if (triples < available.Length)
+            Debug.LogError("The board needs at least " + (available.Length * 3) + " cells to contain every fish type.");
         for (int i = 0; i < triples; i++)
         {
             NormalItem.eNormalType type = available[i % available.Length];

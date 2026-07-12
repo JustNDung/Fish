@@ -139,8 +139,19 @@ public class UIMainManager : MonoBehaviour
         m_gameManager.LoadLevel(GameManager.ePlayMode.AUTO_LOSE);
     }
 
+    internal void LoadTimeAttack()
+    {
+        m_gameManager.LoadLevel(GameManager.ePlayMode.TIME_ATTACK);
+    }
+
     internal string GetGameStatus()
     {
+        if (m_gameManager.IsTimeAttack)
+            return string.Format("TIME: {0:00}\nBOARD: {1}  TRAY: {2}/5",
+                Mathf.CeilToInt(m_gameManager.RemainingTime),
+                m_gameManager.RemainingItems,
+                m_gameManager.TrayCount);
+
         return string.Format("BOARD: {0}\nTRAY: {1}/5", m_gameManager.RemainingItems, m_gameManager.TrayCount);
     }
 

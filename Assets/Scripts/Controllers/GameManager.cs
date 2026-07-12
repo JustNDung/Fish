@@ -7,7 +7,7 @@ public class GameManager : MonoBehaviour
     public event Action<eStateGame> StateChangedAction = delegate { };
 
     public enum eLevelMode { TIMER, MOVES }
-    public enum ePlayMode { MANUAL, AUTO_WIN, AUTO_LOSE }
+    public enum ePlayMode { MANUAL, AUTO_WIN, AUTO_LOSE, TIME_ATTACK }
     public enum eStateGame { SETUP, MAIN_MENU, GAME_STARTED, PAUSE, GAME_OVER, GAME_WIN }
 
     private eStateGame m_state;
@@ -23,6 +23,8 @@ public class GameManager : MonoBehaviour
 
     public int RemainingItems { get { return m_boardController == null ? 0 : m_boardController.RemainingItems; } }
     public int TrayCount { get { return m_boardController == null ? 0 : m_boardController.TrayCount; } }
+    public float RemainingTime { get { return m_boardController == null ? 0f : m_boardController.RemainingTime; } }
+    public bool IsTimeAttack { get; private set; }
 
     private GameSettings m_gameSettings;
     private BoardController m_boardController;
@@ -56,6 +58,7 @@ public class GameManager : MonoBehaviour
     public void LoadLevel(ePlayMode playMode)
     {
         ClearLevel();
+        IsTimeAttack = playMode == ePlayMode.TIME_ATTACK;
         m_boardController = new GameObject("BoardController").AddComponent<BoardController>();
         m_boardController.StartGame(this, m_gameSettings, playMode);
         State = eStateGame.GAME_STARTED;
@@ -78,5 +81,6 @@ public class GameManager : MonoBehaviour
         m_boardController.Clear();
         Destroy(m_boardController.gameObject);
         m_boardController = null;
+        IsTimeAttack = false;
     }
 }

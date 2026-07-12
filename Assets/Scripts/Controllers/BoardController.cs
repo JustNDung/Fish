@@ -6,7 +6,7 @@ using System.Linq;
 using UnityEngine;
 
 /// <summary>
-/// Controls the tap-to-tray version of the game. Items never return to the board.
+/// Controls the tap-to-tray game, including the reversible Time Attack variant.
 /// </summary>
 public class BoardController : MonoBehaviour
 {
@@ -18,6 +18,7 @@ public class BoardController : MonoBehaviour
     public bool IsBusy { get; private set; }
     public int TrayCount { get { return m_tray.Count; } }
     public int RemainingItems { get { return m_board == null ? 0 : m_board.RemainingItems; } }
+    public float RemainingTime { get; private set; }
 
     private readonly List<Item> m_tray = new List<Item>();
     private readonly List<Transform> m_trayCells = new List<Transform>();
@@ -34,9 +35,10 @@ public class BoardController : MonoBehaviour
         m_camera = Camera.main;
         m_board = new Board(transform, settings);
         m_board.FillForTripleMatch();
+        RemainingTime = 60f;
         CreateTray();
 
-        if (playMode != GameManager.ePlayMode.MANUAL)
+        if (playMode == GameManager.ePlayMode.AUTO_WIN || playMode == GameManager.ePlayMode.AUTO_LOSE)
         {
             StartCoroutine(playMode == GameManager.ePlayMode.AUTO_WIN
                 ? AutoWinCoroutine()
@@ -46,8 +48,20 @@ public class BoardController : MonoBehaviour
 
     public void Update()
     {
-        if (m_gameManager.State != GameManager.eStateGame.GAME_STARTED ||
-            m_gameOver || IsBusy || m_playMode != GameManager.ePlayMode.MANUAL) return;
+        if (m_gameManager.State != GameManager.eStateGame.GAME_STARTED || m_gameOver) return;
+
+        if (m_playMode == GameManager.ePlayMode.TIME_ATTACK)
+        {
+            RemainingTime = Mathf.Max(0f, RemainingTime - Time.deltaTime);
+            if (RemainingTime <= 0f)
+            {
+                Finish(false);
+                return;
+            }
+        }
+
+        if (IsBusy || (m_playMode != GameManager.ePlayMode.MANUAL &&
+                       m_playMode != GameManager.ePlayMode.TIME_ATTACK)) return;
 
         if (Input.GetMouseButtonDown(0))
         {
@@ -55,6 +69,13 @@ public class BoardController : MonoBehaviour
             RaycastHit2D hit = Physics2D.Raycast(point, Vector2.zero);
             if (hit.collider != null)
             {
+                int trayIndex = m_trayCells.IndexOf(hit.collider.transform);
+                if (m_playMode == GameManager.ePlayMode.TIME_ATTACK && trayIndex >= 0)
+                {
+                    ReturnToBoard(trayIndex);
+                    return;
+                }
+
                 Cell cell = hit.collider.GetComponent<Cell>();
                 if (cell != null && !cell.IsEmpty) MoveToTray(cell);
             }
@@ -71,9 +92,32 @@ public class BoardController : MonoBehaviour
             trayCell.name = "TrayCell_" + (i + 1);
             trayCell.transform.position = new Vector3(i - (TrayCapacity - 1) * 0.5f, y, 0f);
             Collider2D collider = trayCell.GetComponent<Collider2D>();
-            if (collider != null) collider.enabled = false;
+            if (collider != null) collider.enabled = m_playMode == GameManager.ePlayMode.TIME_ATTACK;
             m_trayCells.Add(trayCell.transform);
         }
+    }
+
+    private void ReturnToBoard(int trayIndex)
+    {
+        if (trayIndex < 0 || trayIndex >= m_tray.Count) return;
+
+        Item item = m_tray[trayIndex];
+        Cell originalCell = item.Cell;
+        if (originalCell == null || !originalCell.IsEmpty) return;
+
+        IsBusy = true;
+        m_tray.RemoveAt(trayIndex);
+        originalCell.Assign(item);
+        item.SetSortingLayerLower();
+        item.View.DOKill();
+        item.View.DOMove(originalCell.transform.position, 0.25f).OnComplete(() =>
+        {
+            IsBusy = false;
+            CheckEndState();
+        });
+
+        for (int i = trayIndex; i < m_tray.Count; i++)
+            m_tray[i].View.DOMove(m_trayCells[i].position, 0.2f);
     }
 
     private bool MoveToTray(Cell cell)
@@ -131,7 +175,7 @@ public class BoardController : MonoBehaviour
         {
             Finish(true);
         }
-        else if (m_tray.Count >= TrayCapacity)
+        else if (m_playMode != GameManager.ePlayMode.TIME_ATTACK && m_tray.Count >= TrayCapacity)
         {
             Finish(false);
         }
